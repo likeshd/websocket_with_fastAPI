@@ -1,10 +1,11 @@
-# chat_app_fastapi/server.py
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 from typing import List
 
 app = FastAPI()
+templates = Jinja2Templates(directory="templates")
 
-# Manager to handle multiple clients
 class ConnectionManager:
     def __init__(self):
         self.active_connections: List[WebSocket] = []
@@ -21,6 +22,10 @@ class ConnectionManager:
             await connection.send_text(message)
 
 manager = ConnectionManager()
+
+@app.get("/", response_class=HTMLResponse)
+async def get_chat_page(request: Request):
+    return templates.TemplateResponse("chat.html", {"request": request})
 
 @app.websocket("/ws/chat")
 async def websocket_endpoint(websocket: WebSocket):
